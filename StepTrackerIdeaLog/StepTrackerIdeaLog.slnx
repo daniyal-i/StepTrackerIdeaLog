@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="StepTrackerIdeaLog.vcxproj" />
+  <Project Path="StepTrackerIdeaLog.vcxproj" Id="50332bcd-4b75-428a-b5c1-00cda98f86b5" />
 </Solution>
