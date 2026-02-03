@@ -1,1 +1,23 @@
 
+name: C++ Unit Tests
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install compiler
+        run: sudo apt-get update && sudo apt-get install -y g++
+
+      - name: Build project
+        run: g++ StepTracker.cpp -o StepTracker
+
+      - name: Run unit tests
+        run: ./StepTracker
