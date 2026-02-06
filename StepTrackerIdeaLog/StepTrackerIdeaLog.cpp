@@ -7,7 +7,9 @@ using namespace std;
 
 // ----------- DOCTEST ------------
 #ifdef _DEBUG
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+    #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#else
+    #define DOCTEST_CONFIG_DISABLE
 #endif
 #include "doctest.h"
 
@@ -68,6 +70,7 @@ public:
 };
 
 // ================= FUNCTION PROTOTYPES =================
+#ifndef _DEBUG
 void showBanner();
 void showMenu();
 int getMenuChoice();
@@ -75,6 +78,7 @@ void addSession(WalkSession sessions[], int& count);
 double calculateStepsPerMinute(const WalkSession& session);
 void displaySessions(const WalkSession sessions[], int count);
 void saveToFile(const WalkSession sessions[], int count);
+#endif
 
 // ================= NORMAL PROGRAM =================
 #ifndef _DEBUG
@@ -120,6 +124,7 @@ int main() {
 #endif
 
 // ================= FUNCTIONS =================
+#ifndef _DEBUG
 void showBanner() {
     cout << "=====================================\n";
     cout << "   Step Tracker and Idea Log Program\n";
@@ -223,17 +228,18 @@ void saveToFile(const WalkSession sessions[], int count) {
 
     file.close();
 }
+#endif
 
 // ================= DOCTEST TESTS =================
 #ifdef _DEBUG
 
 TEST_CASE("Steps per minute calculation") {
-    WalkSession s{ 300, 30.0, "", VAMPIRE };
+    WalkSession s{300, 30.0, "", VAMPIRE};
     CHECK(calculateStepsPerMinute(s) == doctest::Approx(10.0));
 }
 
 TEST_CASE("Zero minutes guard") {
-    WalkSession s{ 100, 0.0, "", HUNTER };
+    WalkSession s{100, 0.0, "", HUNTER};
     CHECK(calculateStepsPerMinute(s) == 0.0);
 }
 
@@ -245,26 +251,26 @@ TEST_CASE("Enum assignment works") {
 
 TEST_CASE("StepTracker adds session") {
     StepTracker tracker;
-    CHECK(tracker.addSession({ 1000, 20, "", HUNTER }));
+    CHECK(tracker.addSession({1000, 20, "", HUNTER}));
 }
 
 TEST_CASE("Session count increments") {
     StepTracker tracker;
-    tracker.addSession({ 500, 10, "", VAMPIRE });
+    tracker.addSession({500, 10, "", VAMPIRE});
     CHECK(tracker.getSessionCount() == 1);
 }
 
 TEST_CASE("Total steps calculation") {
     StepTracker tracker;
-    tracker.addSession({ 1000, 20, "", VAMPIRE });
-    tracker.addSession({ 2000, 40, "", HUNTER });
+    tracker.addSession({1000, 20, "", VAMPIRE});
+    tracker.addSession({2000, 40, "", HUNTER});
     CHECK(tracker.getTotalSteps() == 3000);
 }
 
 TEST_CASE("Average steps per minute") {
     StepTracker tracker;
-    tracker.addSession({ 600, 30, "", WIZARD });
-    tracker.addSession({ 1200, 60, "", VAMPIRE });
+    tracker.addSession({600, 30, "", WIZARD});
+    tracker.addSession({1200, 60, "", VAMPIRE});
     CHECK(tracker.getAverageStepsPerMinute() == doctest::Approx(20.0));
 }
 
