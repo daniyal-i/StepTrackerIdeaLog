@@ -17,7 +17,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y g++
 
       - name: Build project
-        run: g++ StepTrackerIdeaLog/StepTracker.cpp -o StepTracker
+        run: g++ StepTrackerIdeaLog/StepTrackerIdeaLog.cpp -o StepTracker
 
       - name: Run unit tests
         run: ./StepTracker
