@@ -1,11 +1,11 @@
-﻿#include <iostream>
+#include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <string>
 
 using namespace std;
 
-// -----------DOCTEST------------
+// ----------- DOCTEST ------------
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
@@ -223,8 +223,6 @@ void saveToFile(const WalkSession sessions[], int count) {
 }
 
 // ================= DOCTEST TESTS =================
-
-// Calculations
 TEST_CASE("Steps per minute calculation") {
     WalkSession s{ 300, 30.0, "", VAMPIRE };
     CHECK(calculateStepsPerMinute(s) == doctest::Approx(10.0));
@@ -235,14 +233,12 @@ TEST_CASE("Zero minutes guard") {
     CHECK(calculateStepsPerMinute(s) == 0.0);
 }
 
-// Enum
 TEST_CASE("Enum assignment works") {
     WalkSession s;
     s.style = WIZARD;
     CHECK(s.style == WIZARD);
 }
 
-// Struct / Array / Class
 TEST_CASE("StepTracker adds session") {
     StepTracker tracker;
     CHECK(tracker.addSession({ 1000, 20, "", HUNTER }));
