@@ -6,7 +6,9 @@
 using namespace std;
 
 // ----------- DOCTEST ------------
+#ifdef _DEBUG
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#endif
 #include "doctest.h"
 
 const int MAX_SESSIONS = 5;
@@ -175,16 +177,16 @@ double calculateStepsPerMinute(const WalkSession& session) {
 
 void displaySessions(const WalkSession sessions[], int count) {
     cout << left << setw(10) << "Steps"
-        << setw(10) << "Minutes"
-        << setw(15) << "Steps/Min"
-        << "Idea\n";
+         << setw(10) << "Minutes"
+         << setw(15) << "Steps/Min"
+         << "Idea\n";
 
     for (int i = 0; i < count; i++) {
         cout << setw(10) << sessions[i].steps
-            << setw(10) << sessions[i].minutes
-            << setw(15) << fixed << setprecision(2)
-            << calculateStepsPerMinute(sessions[i])
-            << sessions[i].idea << "\n";
+             << setw(10) << sessions[i].minutes
+             << setw(15) << fixed << setprecision(2)
+             << calculateStepsPerMinute(sessions[i])
+             << sessions[i].idea << "\n";
 
         switch (sessions[i].style) {
         case VAMPIRE:
@@ -207,22 +209,24 @@ void saveToFile(const WalkSession sessions[], int count) {
     ofstream file("walk_report.txt");
 
     file << left << setw(10) << "Steps"
-        << setw(10) << "Minutes"
-        << setw(15) << "Steps/Min"
-        << "Idea\n";
+         << setw(10) << "Minutes"
+         << setw(15) << "Steps/Min"
+         << "Idea\n";
 
     for (int i = 0; i < count; i++) {
         file << setw(10) << sessions[i].steps
-            << setw(10) << sessions[i].minutes
-            << setw(15) << fixed << setprecision(2)
-            << calculateStepsPerMinute(sessions[i])
-            << sessions[i].idea << "\n";
+             << setw(10) << sessions[i].minutes
+             << setw(15) << fixed << setprecision(2)
+             << calculateStepsPerMinute(sessions[i])
+             << sessions[i].idea << "\n";
     }
 
     file.close();
 }
 
 // ================= DOCTEST TESTS =================
+#ifdef _DEBUG
+
 TEST_CASE("Steps per minute calculation") {
     WalkSession s{ 300, 30.0, "", VAMPIRE };
     CHECK(calculateStepsPerMinute(s) == doctest::Approx(10.0));
@@ -263,3 +267,5 @@ TEST_CASE("Average steps per minute") {
     tracker.addSession({ 1200, 60, "", VAMPIRE });
     CHECK(tracker.getAverageStepsPerMinute() == doctest::Approx(20.0));
 }
+
+#endif
