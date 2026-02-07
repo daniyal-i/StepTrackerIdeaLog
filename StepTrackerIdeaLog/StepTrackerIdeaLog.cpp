@@ -30,6 +30,19 @@ struct WalkSession {
     CharacterStyle style = VAMPIRE;
 };
 
+// ================= FUNCTION PROTOTYPES =================
+// IMPORTANT: This must be visible in BOTH debug and non-debug
+double calculateStepsPerMinute(const WalkSession& session);
+
+#ifndef _DEBUG
+void showBanner();
+void showMenu();
+int getMenuChoice();
+void addSession(WalkSession sessions[], int& count);
+void displaySessions(const WalkSession sessions[], int count);
+void saveToFile(const WalkSession sessions[], int count);
+#endif
+
 // ================= CLASS =================
 class StepTracker {
 private:
@@ -68,17 +81,6 @@ public:
         return total / count;
     }
 };
-
-// ================= FUNCTION PROTOTYPES =================
-#ifndef _DEBUG
-void showBanner();
-void showMenu();
-int getMenuChoice();
-void addSession(WalkSession sessions[], int& count);
-double calculateStepsPerMinute(const WalkSession& session);
-void displaySessions(const WalkSession sessions[], int count);
-void saveToFile(const WalkSession sessions[], int count);
-#endif
 
 // ================= NORMAL PROGRAM =================
 #ifndef _DEBUG
@@ -173,13 +175,16 @@ void addSession(WalkSession sessions[], int& count) {
     sessions[count].style = static_cast<CharacterStyle>(style);
     count++;
 }
+#endif
 
+// This function is used by BOTH program mode and test mode
 double calculateStepsPerMinute(const WalkSession& session) {
     if (session.minutes <= 0)
         return 0.0;
     return session.steps / session.minutes;
 }
 
+#ifndef _DEBUG
 void displaySessions(const WalkSession sessions[], int count) {
     cout << left << setw(10) << "Steps"
          << setw(10) << "Minutes"
