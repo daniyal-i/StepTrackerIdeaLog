@@ -1,4 +1,3 @@
-
 name: C++ Unit Tests
 
 on:
@@ -16,8 +15,8 @@ jobs:
       - name: Install compiler
         run: sudo apt-get update && sudo apt-get install -y g++
 
-      - name: Build project
-        run: g++ StepTrackerIdeaLog/StepTrackerIdeaLog.cpp -o StepTracker
+      - name: Build project (DEBUG mode)
+        run: g++ -D_DEBUG StepTrackerIdeaLog/StepTrackerIdeaLog.cpp -o StepTracker
 
       - name: Run unit tests
         run: ./StepTracker
