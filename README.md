@@ -1,3 +1,5 @@
+![C++ Unit Tests](https://github.com/daniyal-i/StepTrackerIdeaLog/actions/workflows/tests.yml/badge.svg)
+
 # \#StepTrackerLog
 
 
