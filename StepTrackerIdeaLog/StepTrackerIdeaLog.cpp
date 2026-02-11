@@ -18,12 +18,93 @@ enum CharacterStyle {
     WIZARD
 };
 
+// Helper function to display enum as text
+string styleToString(CharacterStyle style) {
+    switch (style) {
+    case VAMPIRE: return "Vampire";
+    case HUNTER:  return "Hunter";
+    case WIZARD:  return "Wizard";
+    default:      return "Unknown";
+    }
+}
+
 // Struct for walk session
 struct WalkSession {
     int steps = 0;
     double minutes = 0.0;
     string idea = "";
     CharacterStyle style = VAMPIRE;
+};
+
+// ================= BASE CLASS =================
+class Activity {
+protected:
+    string idea;
+    int duration;              // minutes
+    CharacterStyle style;
+
+public:
+    Activity() : idea(""), duration(0), style(VAMPIRE) {}
+
+    Activity(string i, int d, CharacterStyle s)
+        : idea(i), duration(d), style(s) {
+    }
+
+    string getIdea() const { return idea; }
+    int getDuration() const { return duration; }
+    CharacterStyle getStyle() const { return style; }
+
+    void setIdea(const string& i) { idea = i; }
+    void setDuration(int d) { duration = d; }
+    void setStyle(CharacterStyle s) { style = s; }
+
+    virtual void print() const {
+        cout << "Idea: " << idea << endl;
+        cout << "Duration: " << duration << " minutes" << endl;
+        cout << "Style: " << styleToString(style) << endl;
+    }
+};
+
+// ================= DERIVED CLASS #1 =================
+class WalkingActivity : public Activity {
+private:
+    int steps;
+
+public:
+    WalkingActivity() : Activity(), steps(0) {}
+
+    WalkingActivity(string i, int d, CharacterStyle s, int st)
+        : Activity(i, d, s), steps(st) {
+    }
+
+    int getSteps() const { return steps; }
+    void setSteps(int s) { steps = s; }
+
+    void print() const override {
+        Activity::print();   // call base print
+        cout << "Steps: " << steps << endl;
+    }
+};
+
+// ================= DERIVED CLASS #2 =================
+class StyledActivity : public Activity {
+private:
+    CharacterStyle activityStyle;
+
+public:
+    StyledActivity() : Activity(), activityStyle(VAMPIRE) {}
+
+    StyledActivity(string i, int d, CharacterStyle s)
+        : Activity(i, d, s), activityStyle(s) {
+    }
+
+    CharacterStyle getActivityStyle() const { return activityStyle; }
+    void setActivityStyle(CharacterStyle s) { activityStyle = s; }
+
+    void print() const override {
+        Activity::print();   // call base print
+        cout << "Activity Style: " << styleToString(activityStyle) << endl;
+    }
 };
 
 // ================= CLASS =================
@@ -186,17 +267,7 @@ void displaySessions(const WalkSession sessions[], int count) {
             << calculateStepsPerMinute(sessions[i])
             << sessions[i].idea << "\n";
 
-        switch (sessions[i].style) {
-        case VAMPIRE:
-            cout << "  Vampiric focus achieved.\n";
-            break;
-        case HUNTER:
-            cout << "  Hunter instincts sharpened.\n";
-            break;
-        case WIZARD:
-            cout << "  Wisdom unlocked.\n";
-            break;
-        }
+        cout << "  Style: " << styleToString(sessions[i].style) << endl;
 
         if (sessions[i].steps > 3000 && sessions[i].minutes < 30)
             cout << "  High-energy walk detected!\n";
@@ -223,8 +294,6 @@ void saveToFile(const WalkSession sessions[], int count) {
 }
 
 // ================= DOCTEST TESTS =================
-
-// Calculations
 TEST_CASE("Steps per minute calculation") {
     WalkSession s{ 300, 30.0, "", VAMPIRE };
     CHECK(calculateStepsPerMinute(s) == doctest::Approx(10.0));
@@ -235,14 +304,12 @@ TEST_CASE("Zero minutes guard") {
     CHECK(calculateStepsPerMinute(s) == 0.0);
 }
 
-// Enum
 TEST_CASE("Enum assignment works") {
     WalkSession s;
     s.style = WIZARD;
     CHECK(s.style == WIZARD);
 }
 
-// Struct / Array / Class
 TEST_CASE("StepTracker adds session") {
     StepTracker tracker;
     CHECK(tracker.addSession({ 1000, 20, "", HUNTER }));
@@ -266,4 +333,14 @@ TEST_CASE("Average steps per minute") {
     tracker.addSession({ 600, 30, "", WIZARD });
     tracker.addSession({ 1200, 60, "", VAMPIRE });
     CHECK(tracker.getAverageStepsPerMinute() == doctest::Approx(20.0));
+}
+
+TEST_CASE("WalkingActivity stores steps") {
+    WalkingActivity w("Test walk", 20, VAMPIRE, 1500);
+    CHECK(w.getSteps() == 1500);
+}
+
+TEST_CASE("StyledActivity stores style") {
+    StyledActivity s("Styled walk", 10, WIZARD);
+    CHECK(s.getActivityStyle() == WIZARD);
 }
