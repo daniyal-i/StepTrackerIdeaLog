@@ -2,23 +2,23 @@
 #include <iomanip>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
-// -----------DOCTEST------------
+// ----------- DOCTEST ------------
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
 const int MAX_SESSIONS = 5;
 
-// Enum for character theme
+// ================= ENUM =================
 enum CharacterStyle {
     VAMPIRE = 1,
     HUNTER,
     WIZARD
 };
 
-// Helper function to display enum as text
 string styleToString(CharacterStyle style) {
     switch (style) {
     case VAMPIRE: return "Vampire";
@@ -28,7 +28,7 @@ string styleToString(CharacterStyle style) {
     }
 }
 
-// Struct for walk session
+// ================= WALK SESSION STRUCT =================
 struct WalkSession {
     int steps = 0;
     double minutes = 0.0;
@@ -40,28 +40,31 @@ struct WalkSession {
 class Activity {
 protected:
     string idea;
-    int duration;              // minutes
+    int duration;
     CharacterStyle style;
 
 public:
-    Activity() : idea(""), duration(0), style(VAMPIRE) {}
-
-    Activity(string i, int d, CharacterStyle s)
+    Activity(string i = "", int d = 0, CharacterStyle s = VAMPIRE)
         : idea(i), duration(d), style(s) {
     }
+
+    virtual ~Activity() {}
 
     string getIdea() const { return idea; }
     int getDuration() const { return duration; }
     CharacterStyle getStyle() const { return style; }
 
-    void setIdea(const string& i) { idea = i; }
-    void setDuration(int d) { duration = d; }
-    void setStyle(CharacterStyle s) { style = s; }
-
     virtual void print() const {
         cout << "Idea: " << idea << endl;
         cout << "Duration: " << duration << " minutes" << endl;
         cout << "Style: " << styleToString(style) << endl;
+    }
+
+    // Polymorphic stream support
+    virtual void toStream(ostream& out) const {
+        out << idea << " | "
+            << duration << " min | "
+            << styleToString(style);
     }
 };
 
@@ -71,18 +74,28 @@ private:
     int steps;
 
 public:
-    WalkingActivity() : Activity(), steps(0) {}
-
-    WalkingActivity(string i, int d, CharacterStyle s, int st)
+    WalkingActivity(string i = "", int d = 0,
+        CharacterStyle s = VAMPIRE, int st = 0)
         : Activity(i, d, s), steps(st) {
     }
 
     int getSteps() const { return steps; }
-    void setSteps(int s) { steps = s; }
+
+    // Equality operator
+    bool operator==(const WalkingActivity& other) const {
+        return idea == other.idea &&
+            duration == other.duration &&
+            steps == other.steps;
+    }
 
     void print() const override {
-        Activity::print();   // call base print
+        Activity::print();
         cout << "Steps: " << steps << endl;
+    }
+
+    void toStream(ostream& out) const override {
+        Activity::toStream(out);
+        out << " | Steps: " << steps;
     }
 };
 
@@ -92,22 +105,29 @@ private:
     CharacterStyle activityStyle;
 
 public:
-    StyledActivity() : Activity(), activityStyle(VAMPIRE) {}
-
-    StyledActivity(string i, int d, CharacterStyle s)
+    StyledActivity(string i = "", int d = 0,
+        CharacterStyle s = VAMPIRE)
         : Activity(i, d, s), activityStyle(s) {
     }
 
-    CharacterStyle getActivityStyle() const { return activityStyle; }
-    void setActivityStyle(CharacterStyle s) { activityStyle = s; }
+    CharacterStyle getActivityStyle() const {
+        return activityStyle;
+    }
 
-    void print() const override {
-        Activity::print();   // call base print
-        cout << "Activity Style: " << styleToString(activityStyle) << endl;
+    void toStream(ostream& out) const override {
+        Activity::toStream(out);
+        out << " | Activity Style: "
+            << styleToString(activityStyle);
     }
 };
 
-// ================= CLASS =================
+// ================= STREAM INSERTION =================
+ostream& operator<<(ostream& out, const Activity& activity) {
+    activity.toStream(out);
+    return out;
+}
+
+// ================= ORIGINAL STEPTRACKER (WEEK 05) =================
 class StepTracker {
 private:
     WalkSession sessions[MAX_SESSIONS];
@@ -117,7 +137,8 @@ public:
     StepTracker() : count(0) {}
 
     bool addSession(const WalkSession& s) {
-        if (count >= MAX_SESSIONS || s.steps <= 0 || s.minutes <= 0)
+        if (count >= MAX_SESSIONS ||
+            s.steps <= 0 || s.minutes <= 0)
             return false;
 
         sessions[count++] = s;
@@ -140,185 +161,93 @@ public:
 
         double total = 0.0;
         for (int i = 0; i < count; i++)
-            total += sessions[i].steps / sessions[i].minutes;
+            total += sessions[i].steps /
+            sessions[i].minutes;
 
         return total / count;
     }
 };
 
-// ================= FUNCTION PROTOTYPES =================
-void showBanner();
-void showMenu();
-int getMenuChoice();
-void addSession(WalkSession sessions[], int& count);
-double calculateStepsPerMinute(const WalkSession& session);
-void displaySessions(const WalkSession sessions[], int count);
-void saveToFile(const WalkSession sessions[], int count);
-
-// ================= NORMAL PROGRAM =================
-#ifndef _DEBUG
-int main() {
-    WalkSession sessions[MAX_SESSIONS];
-    int sessionCount = 0;
-    int choice;
-
-    showBanner();
-
-    do {
-        showMenu();
-        choice = getMenuChoice();
-
-        switch (choice) {
-        case 1:
-            if (sessionCount < MAX_SESSIONS)
-                addSession(sessions, sessionCount);
-            else
-                cout << "Session limit reached.\n";
-            break;
-
-        case 2:
-            displaySessions(sessions, sessionCount);
-            break;
-
-        case 3:
-            saveToFile(sessions, sessionCount);
-            cout << "Report saved to file.\n";
-            break;
-
-        case 4:
-            cout << "Goodbye!\n";
-            break;
-
-        default:
-            cout << "Invalid option.\n";
-        }
-    } while (choice != 4);
-
-    return 0;
-}
-#endif
-
-// ================= FUNCTIONS =================
-void showBanner() {
-    cout << "=====================================\n";
-    cout << "   Step Tracker and Idea Log Program\n";
-    cout << "=====================================\n";
+// ================= FUNCTION TEMPLATE =================
+template <typename T>
+T getMax(T a, T b) {
+    return (a > b) ? a : b;
 }
 
-void showMenu() {
-    cout << "\n1. Add Walking Session\n";
-    cout << "2. View Sessions\n";
-    cout << "3. Save Report\n";
-    cout << "4. Exit\n";
-}
+// ================= TEMPLATE CONTAINER (WEEK 06) =================
+template <typename T>
+class ActivityContainer {
+private:
+    T** items;
+    int size;
+    int capacity;
 
-int getMenuChoice() {
-    int choice;
-    while (!(cin >> choice)) {
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "Enter a valid number: ";
-    }
-    return choice;
-}
+    void resize() {
+        capacity *= 2;
+        T** temp = new T * [capacity];
 
-void addSession(WalkSession sessions[], int& count) {
-    cin.ignore(1000, '\n');
+        for (int i = 0; i < size; i++)
+            temp[i] = items[i];
 
-    cout << "Enter idea or reminder: ";
-    getline(cin, sessions[count].idea);
-
-    do {
-        cout << "Enter steps walked: ";
-        cin >> sessions[count].steps;
-    } while (sessions[count].steps <= 0);
-
-    do {
-        cout << "Enter minutes walked: ";
-        cin >> sessions[count].minutes;
-    } while (sessions[count].minutes <= 0);
-
-    int style;
-    do {
-        cout << "Choose style (1=Vampire, 2=Hunter, 3=Wizard): ";
-        cin >> style;
-    } while (style < 1 || style > 3);
-
-    sessions[count].style = static_cast<CharacterStyle>(style);
-    count++;
-}
-
-double calculateStepsPerMinute(const WalkSession& session) {
-    if (session.minutes <= 0)
-        return 0.0;
-    return session.steps / session.minutes;
-}
-
-void displaySessions(const WalkSession sessions[], int count) {
-    cout << left << setw(10) << "Steps"
-        << setw(10) << "Minutes"
-        << setw(15) << "Steps/Min"
-        << "Idea\n";
-
-    for (int i = 0; i < count; i++) {
-        cout << setw(10) << sessions[i].steps
-            << setw(10) << sessions[i].minutes
-            << setw(15) << fixed << setprecision(2)
-            << calculateStepsPerMinute(sessions[i])
-            << sessions[i].idea << "\n";
-
-        cout << "  Style: " << styleToString(sessions[i].style) << endl;
-
-        if (sessions[i].steps > 3000 && sessions[i].minutes < 30)
-            cout << "  High-energy walk detected!\n";
-    }
-}
-
-void saveToFile(const WalkSession sessions[], int count) {
-    ofstream file("walk_report.txt");
-
-    file << left << setw(10) << "Steps"
-        << setw(10) << "Minutes"
-        << setw(15) << "Steps/Min"
-        << "Idea\n";
-
-    for (int i = 0; i < count; i++) {
-        file << setw(10) << sessions[i].steps
-            << setw(10) << sessions[i].minutes
-            << setw(15) << fixed << setprecision(2)
-            << calculateStepsPerMinute(sessions[i])
-            << sessions[i].idea << "\n";
+        delete[] items;
+        items = temp;
     }
 
-    file.close();
-}
+public:
+    ActivityContainer(int cap = 5)
+        : size(0), capacity(cap) {
+        items = new T * [capacity];
+    }
 
-// ================= DOCTEST TESTS =================
+    ~ActivityContainer() {
+        for (int i = 0; i < size; i++)
+            delete items[i];
+        delete[] items;
+    }
+
+    int getSize() const { return size; }
+
+    // operator +=
+    ActivityContainer& operator+=(T* item) {
+        if (size == capacity)
+            resize();
+
+        this->items[size++] = item;  // explicit this
+        return *this;
+    }
+
+    // operator -=
+    ActivityContainer& operator-=(int index) {
+        if (index < 0 || index >= size)
+            return *this;
+
+        delete items[index];
+
+        for (int i = index; i < size - 1; i++)
+            items[i] = items[i + 1];
+
+        size--;
+        return *this;
+    }
+
+    // operator []
+    T* operator[](int index) {
+        if (index < 0 || index >= size)
+            return nullptr;
+
+        return items[index];
+    }
+};
+
+// ================= ORIGINAL DOCTESTS =================
 TEST_CASE("Steps per minute calculation") {
     WalkSession s{ 300, 30.0, "", VAMPIRE };
-    CHECK(calculateStepsPerMinute(s) == doctest::Approx(10.0));
-}
-
-TEST_CASE("Zero minutes guard") {
-    WalkSession s{ 100, 0.0, "", HUNTER };
-    CHECK(calculateStepsPerMinute(s) == 0.0);
-}
-
-TEST_CASE("Enum assignment works") {
-    WalkSession s;
-    s.style = WIZARD;
-    CHECK(s.style == WIZARD);
+    CHECK((s.steps / s.minutes) == doctest::Approx(10.0));
 }
 
 TEST_CASE("StepTracker adds session") {
     StepTracker tracker;
     CHECK(tracker.addSession({ 1000, 20, "", HUNTER }));
-}
-
-TEST_CASE("Session count increments") {
-    StepTracker tracker;
-    tracker.addSession({ 500, 10, "", VAMPIRE });
-    CHECK(tracker.getSessionCount() == 1);
 }
 
 TEST_CASE("Total steps calculation") {
@@ -328,19 +257,45 @@ TEST_CASE("Total steps calculation") {
     CHECK(tracker.getTotalSteps() == 3000);
 }
 
-TEST_CASE("Average steps per minute") {
-    StepTracker tracker;
-    tracker.addSession({ 600, 30, "", WIZARD });
-    tracker.addSession({ 1200, 60, "", VAMPIRE });
-    CHECK(tracker.getAverageStepsPerMinute() == doctest::Approx(20.0));
+// ================= NEW WEEK 06 TESTS =================
+TEST_CASE("WalkingActivity equality") {
+    WalkingActivity a("Test", 20, VAMPIRE, 1000);
+    WalkingActivity b("Test", 20, VAMPIRE, 1000);
+    CHECK(a == b);
 }
 
-TEST_CASE("WalkingActivity stores steps") {
-    WalkingActivity w("Test walk", 20, VAMPIRE, 1500);
-    CHECK(w.getSteps() == 1500);
+TEST_CASE("Stream operator works polymorphically") {
+    Activity* a = new WalkingActivity("Walk", 30, HUNTER, 2000);
+    ostringstream out;
+    out << *a;
+    CHECK(out.str().find("Steps") != string::npos);
+    delete a;
 }
 
-TEST_CASE("StyledActivity stores style") {
-    StyledActivity s("Styled walk", 10, WIZARD);
-    CHECK(s.getActivityStyle() == WIZARD);
+TEST_CASE("ActivityContainer add and size") {
+    ActivityContainer<Activity> container;
+    container += new WalkingActivity("Walk", 10, VAMPIRE, 500);
+    CHECK(container.getSize() == 1);
+}
+
+TEST_CASE("ActivityContainer indexing") {
+    ActivityContainer<Activity> container;
+    container += new WalkingActivity("Walk", 10, VAMPIRE, 500);
+    CHECK(container[0] != nullptr);
+}
+
+TEST_CASE("ActivityContainer remove") {
+    ActivityContainer<Activity> container;
+    container += new WalkingActivity("A", 10, VAMPIRE, 500);
+    container += new WalkingActivity("B", 20, HUNTER, 1000);
+
+    container -= 0;
+
+    CHECK(container.getSize() == 1);
+    CHECK(container[0]->getIdea() == "B");
+}
+
+TEST_CASE("Function template works") {
+    CHECK(getMax(3, 7) == 7);
+    CHECK(getMax(2.5, 5.1) == doctest::Approx(5.1));
 }

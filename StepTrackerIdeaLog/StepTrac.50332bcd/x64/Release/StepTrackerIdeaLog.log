@@ -1,6 +1,7 @@
 ﻿  StepTrackerIdeaLog.cpp
   Generating code
-  Previous IPDB not found, fall back to full compilation.
-  All 193 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  1644 of 1694 functions (97.0%) were compiled, the rest were copied from previous compilation.
+    1525 functions were new in current compilation
+    16 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   StepTrackerIdeaLog.vcxproj -> C:\Users\Daniyal Imran\Documents\GitHub\StepTrackerLog\StepTrackerIdeaLog\x64\Release\StepTrackerIdeaLog.exe
