@@ -7,7 +7,11 @@
 using namespace std;
 
 // ----------- DOCTEST ------------
+#ifdef _DEBUG
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#else
+#define DOCTEST_CONFIG_DISABLE
+#endif
 #include "doctest.h"
 
 const int MAX_SESSIONS = 5;
@@ -19,7 +23,7 @@ enum CharacterStyle {
     WIZARD
 };
 
-// Struct for walk session
+// ================= STRUCT =================
 struct WalkSession {
     int steps = 0;
     double minutes = 0.0;
@@ -37,8 +41,7 @@ public:
     StepTracker() : count(0) {}
 
     bool addSession(const WalkSession& s) {
-        if (count >= MAX_SESSIONS ||
-            s.steps <= 0 || s.minutes <= 0)
+        if (count >= MAX_SESSIONS || s.steps <= 0 || s.minutes <= 0)
             return false;
 
         sessions[count++] = s;
@@ -57,12 +60,12 @@ public:
     }
 
     double getAverageStepsPerMinute() const {
-        if (count == 0) return 0.0;
+        if (count == 0)
+            return 0.0;
 
         double total = 0.0;
         for (int i = 0; i < count; i++)
-            total += sessions[i].steps /
-            sessions[i].minutes;
+            total += calculateStepsPerMinute(sessions[i]);
 
         return total / count;
     }
@@ -84,87 +87,113 @@ int main() {
     int sessionCount = 0;
     int choice;
 
-    void resize() {
-        capacity *= 2;
-        T** temp = new T * [capacity];
+    showBanner();
 
-        for (int i = 0; i < size; i++)
-            temp[i] = items[i];
+    do {
+        showMenu();
+        choice = getMenuChoice();
 
-        delete[] items;
-        items = temp;
-    }
+        switch (choice) {
+        case 1:
+            if (sessionCount < MAX_SESSIONS)
+                addSession(sessions, sessionCount);
+            else
+                cout << "Session limit reached.\n";
+            break;
 
-public:
-    ActivityContainer(int cap = 5)
-        : size(0), capacity(cap) {
-        items = new T * [capacity];
-    }
+        case 2:
+            displaySessions(sessions, sessionCount);
+            break;
 
-    ~ActivityContainer() {
-        for (int i = 0; i < size; i++)
-            delete items[i];
-        delete[] items;
-    }
+        case 3:
+            saveToFile(sessions, sessionCount);
+            cout << "Report saved to file.\n";
+            break;
+
+        case 4:
+            cout << "Goodbye!\n";
+            break;
+
+        default:
+            cout << "Invalid option.\n";
+        }
+
+    } while (choice != 4);
+
+    return 0;
+}
+#endif
 
 // ================= FUNCTIONS =================
+
 void showBanner() {
     cout << "=====================================\n";
     cout << "   Step Tracker and Idea Log Program\n";
     cout << "=====================================\n";
 }
 
-    // operator +=
-    ActivityContainer& operator+=(T* item) {
-        if (size == capacity)
-            resize();
+void showMenu() {
+    cout << "\n1. Add Walking Session\n";
+    cout << "2. View Sessions\n";
+    cout << "3. Save Report\n";
+    cout << "4. Exit\n";
+}
 
-        this->items[size++] = item;  // explicit this
-        return *this;
+int getMenuChoice() {
+    int choice;
+    while (!(cin >> choice)) {
+        cin.clear();
+        cin.ignore(1000, '\n');
+        cout << "Enter a valid number: ";
     }
+    return choice;
+}
 
-    // operator -=
-    ActivityContainer& operator-=(int index) {
-        if (index < 0 || index >= size)
-            return *this;
+void addSession(WalkSession sessions[], int& count) {
+    cin.ignore(1000, '\n');
 
-        delete items[index];
+    cout << "Enter idea or reminder: ";
+    getline(cin, sessions[count].idea);
 
-    sessions[count].style = static_cast<CharacterStyle>(style);
+    do {
+        cout << "Enter steps walked: ";
+        cin >> sessions[count].steps;
+    } while (sessions[count].steps <= 0);
+
+    do {
+        cout << "Enter minutes walked: ";
+        cin >> sessions[count].minutes;
+    } while (sessions[count].minutes <= 0);
+
+    int styleChoice;
+    do {
+        cout << "Choose style (1=Vampire, 2=Hunter, 3=Wizard): ";
+        cin >> styleChoice;
+    } while (styleChoice < 1 || styleChoice > 3);
+
+    sessions[count].style = static_cast<CharacterStyle>(styleChoice);
     count++;
 }
 
-        size--;
-        return *this;
-    }
+double calculateStepsPerMinute(const WalkSession& session) {
+    if (session.minutes <= 0)
+        return 0.0;
+
+    return session.steps / session.minutes;
+}
 
 void displaySessions(const WalkSession sessions[], int count) {
     cout << left << setw(10) << "Steps"
-        << setw(10) << "Minutes"
-        << setw(15) << "Steps/Min"
-        << "Idea\n";
+         << setw(10) << "Minutes"
+         << setw(15) << "Steps/Min"
+         << "Idea\n";
 
     for (int i = 0; i < count; i++) {
         cout << setw(10) << sessions[i].steps
-            << setw(10) << sessions[i].minutes
-            << setw(15) << fixed << setprecision(2)
-            << calculateStepsPerMinute(sessions[i])
-            << sessions[i].idea << "\n";
-
-        switch (sessions[i].style) {
-        case VAMPIRE:
-            cout << "  Vampiric focus achieved.\n";
-            break;
-        case HUNTER:
-            cout << "  Hunter instincts sharpened.\n";
-            break;
-        case WIZARD:
-            cout << "  Wisdom unlocked.\n";
-            break;
-        }
-
-        if (sessions[i].steps > 3000 && sessions[i].minutes < 30)
-            cout << "  High-energy walk detected!\n";
+             << setw(10) << sessions[i].minutes
+             << setw(15) << fixed << setprecision(2)
+             << calculateStepsPerMinute(sessions[i])
+             << sessions[i].idea << "\n";
     }
 }
 
@@ -172,29 +201,23 @@ void saveToFile(const WalkSession sessions[], int count) {
     ofstream file("walk_report.txt");
 
     file << left << setw(10) << "Steps"
-        << setw(10) << "Minutes"
-        << setw(15) << "Steps/Min"
-        << "Idea\n";
+         << setw(10) << "Minutes"
+         << setw(15) << "Steps/Min"
+         << "Idea\n";
 
     for (int i = 0; i < count; i++) {
         file << setw(10) << sessions[i].steps
-            << setw(10) << sessions[i].minutes
-            << setw(15) << fixed << setprecision(2)
-            << calculateStepsPerMinute(sessions[i])
-            << sessions[i].idea << "\n";
+             << setw(10) << sessions[i].minutes
+             << setw(15) << fixed << setprecision(2)
+             << calculateStepsPerMinute(sessions[i])
+             << sessions[i].idea << "\n";
     }
 
-TEST_CASE("Total steps calculation") {
-    StepTracker tracker;
-    tracker.addSession({ 1000, 20, "", VAMPIRE });
-    tracker.addSession({ 2000, 40, "", HUNTER });
-    CHECK(tracker.getTotalSteps() == 3000);
+    file.close();
 }
-#endif
 
 // ================= DOCTEST TESTS =================
 
-// Calculations
 TEST_CASE("Steps per minute calculation") {
     WalkSession s{ 300, 30.0, "", VAMPIRE };
     CHECK(calculateStepsPerMinute(s) == doctest::Approx(10.0));
@@ -205,14 +228,12 @@ TEST_CASE("Zero minutes guard") {
     CHECK(calculateStepsPerMinute(s) == 0.0);
 }
 
-// Enum
 TEST_CASE("Enum assignment works") {
     WalkSession s;
     s.style = WIZARD;
     CHECK(s.style == WIZARD);
 }
 
-// Struct / Array / Class
 TEST_CASE("StepTracker adds session") {
     StepTracker tracker;
     CHECK(tracker.addSession({ 1000, 20, "", HUNTER }));
