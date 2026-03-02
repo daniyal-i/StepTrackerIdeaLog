@@ -7,27 +7,6 @@
       <FileName>StepTrackerIdeaLog.cpp</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="Activity" Collapsed="true">
-    <Position X="3.25" Y="0.75" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>BAQAAAIAAAAAIAQAAAAAQAAABAAEAAACAAAAAEBAAAA=</HashCode>
-      <FileName>StepTrackerIdeaLog.cpp</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="WalkingActivity" Collapsed="true">
-    <Position X="5" Y="2.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>EAQAAQAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>StepTrackerIdeaLog.cpp</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="StyledActivity" Collapsed="true">
-    <Position X="2" Y="2.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAQAAAAAAAEQAAAAAAAAAAQAAAAAAAABAAAAAAAAAAA=</HashCode>
-      <FileName>StepTrackerIdeaLog.cpp</FileName>
-    </TypeIdentifier>
-  </Class>
   <Struct Name="WalkSession">
     <Position X="5.5" Y="3.75" Width="1.25" />
     <TypeIdentifier>
