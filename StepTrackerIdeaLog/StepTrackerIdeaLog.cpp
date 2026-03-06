@@ -257,4 +257,4 @@ TEST_CASE("Average steps per minute") {
     tracker.addSession({ 600, 30, "", WIZARD });
     tracker.addSession({ 1200, 60, "", VAMPIRE });
     CHECK(tracker.getAverageStepsPerMinute() == doctest::Approx(20.0));
-}}
+}
