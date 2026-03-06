@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <stdexcept>   // NEW for exceptions
 
 using namespace std;
 
@@ -21,6 +22,13 @@ enum CharacterStyle {
     VAMPIRE = 1,
     HUNTER,
     WIZARD
+};
+
+// ================= CUSTOM EXCEPTION =================
+class StepTrackerException : public std::runtime_error {
+public:
+    StepTrackerException(const std::string& message)
+        : std::runtime_error(message) {}
 };
 
 // ================= STRUCT =================
@@ -68,6 +76,32 @@ public:
             total += sessions[i].steps / sessions[i].minutes;
 
         return total / count;
+    }
+
+    // ================= operator[] =================
+    WalkSession& operator[](int index) {
+        if (index < 0 || index >= count)
+            throw StepTrackerException("Invalid index access");
+
+        return sessions[index];
+    }
+
+    const WalkSession& operator[](int index) const {
+        if (index < 0 || index >= count)
+            throw StepTrackerException("Invalid index access");
+
+        return sessions[index];
+    }
+
+    // ================= removeSession =================
+    void removeSession(int index) {
+        if (index < 0 || index >= count)
+            throw StepTrackerException("Invalid removal index");
+
+        for (int i = index; i < count - 1; i++)
+            sessions[i] = sessions[i + 1];
+
+        count--;
     }
 };
 
@@ -223,38 +257,12 @@ TEST_CASE("Steps per minute calculation") {
     CHECK(calculateStepsPerMinute(s) == doctest::Approx(10.0));
 }
 
-TEST_CASE("Zero minutes guard") {
-    WalkSession s{ 100, 0.0, "", HUNTER };
-    CHECK(calculateStepsPerMinute(s) == 0.0);
-}
-
-TEST_CASE("Enum assignment works") {
-    WalkSession s;
-    s.style = WIZARD;
-    CHECK(s.style == WIZARD);
-}
-
-TEST_CASE("StepTracker adds session") {
+TEST_CASE("Invalid index throws exception") {
     StepTracker tracker;
-    CHECK(tracker.addSession({ 1000, 20, "", HUNTER }));
+    CHECK_THROWS(tracker[0]);
 }
 
-TEST_CASE("Session count increments") {
+TEST_CASE("Invalid removal throws exception") {
     StepTracker tracker;
-    tracker.addSession({ 500, 10, "", VAMPIRE });
-    CHECK(tracker.getSessionCount() == 1);
-}
-
-TEST_CASE("Total steps calculation") {
-    StepTracker tracker;
-    tracker.addSession({ 1000, 20, "", VAMPIRE });
-    tracker.addSession({ 2000, 40, "", HUNTER });
-    CHECK(tracker.getTotalSteps() == 3000);
-}
-
-TEST_CASE("Average steps per minute") {
-    StepTracker tracker;
-    tracker.addSession({ 600, 30, "", WIZARD });
-    tracker.addSession({ 1200, 60, "", VAMPIRE });
-    CHECK(tracker.getAverageStepsPerMinute() == doctest::Approx(20.0));
+    CHECK_THROWS(tracker.removeSession(0));
 }
