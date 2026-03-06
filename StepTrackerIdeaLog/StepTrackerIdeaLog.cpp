@@ -65,7 +65,7 @@ public:
 
         double total = 0.0;
         for (int i = 0; i < count; i++)
-            total += calculateStepsPerMinute(sessions[i]);
+            total += sessions[i].steps / sessions[i].minutes;
 
         return total / count;
     }
