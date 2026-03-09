@@ -1,3 +1,6 @@
+// #define _CRTDBG_MAP_ALLOC
+// #include <crtdbg.h>
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -65,6 +68,17 @@ public:
         for (int i = 0; i < count; i++)
             total += sessions[i].steps;
         return total;
+    }
+
+    // ================= NEW RECURSIVE FUNCTION =================
+    int getTotalStepsRecursive(int index = 0) const {
+        // Base case
+        if (index >= count)
+            return 0;
+
+        // Recursive case
+        return sessions[index].steps +
+            getTotalStepsRecursive(index + 1);
     }
 
     double getAverageStepsPerMinute() const {
@@ -153,6 +167,8 @@ int main() {
         }
 
     } while (choice != 4);
+
+    // _CrtDumpMemoryLeaks();
 
     return 0;
 }
@@ -265,4 +281,11 @@ TEST_CASE("Invalid index throws exception") {
 TEST_CASE("Invalid removal throws exception") {
     StepTracker tracker;
     CHECK_THROWS(tracker.removeSession(0));
+}
+
+TEST_CASE("Recursive total steps works") {
+    StepTracker tracker;
+    tracker.addSession({ 1000, 20, "", VAMPIRE });
+    tracker.addSession({ 2000, 30, "", HUNTER });
+    CHECK(tracker.getTotalStepsRecursive() == 3000);
 }
