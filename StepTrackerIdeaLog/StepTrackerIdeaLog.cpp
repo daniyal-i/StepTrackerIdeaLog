@@ -6,7 +6,8 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <stdexcept>   // NEW for exceptions
+#include <stdexcept>
+#include <vector>   // NEW for Week 09
 
 using namespace std;
 
@@ -18,7 +19,7 @@ using namespace std;
 #endif
 #include "doctest.h"
 
-const int MAX_SESSIONS = 5;
+const int MAX_SESSIONS = 5; // left for main program compatibility
 
 // ================= ENUM =================
 enum CharacterStyle {
@@ -45,77 +46,111 @@ struct WalkSession {
 // ================= CLASS =================
 class StepTracker {
 private:
-    WalkSession sessions[MAX_SESSIONS];
-    int count;
+    vector<WalkSession> sessions;  // ARRAY REPLACED
 
 public:
-    StepTracker() : count(0) {}
+    StepTracker() {}
 
     bool addSession(const WalkSession& s) {
-        if (count >= MAX_SESSIONS || s.steps <= 0 || s.minutes <= 0)
+        if (s.steps <= 0 || s.minutes <= 0)
             return false;
 
-        sessions[count++] = s;
+        sessions.push_back(s);
         return true;
     }
 
-    int getSessionCount() const {
-        return count;
+    size_t getSessionCount() const {
+        return sessions.size();
     }
 
     int getTotalSteps() const {
         int total = 0;
-        for (int i = 0; i < count; i++)
-            total += sessions[i].steps;
+        for (size_t i = 0; i < sessions.size(); i++)
+            total += sessions.at(i).steps;
         return total;
     }
 
-    // ================= NEW RECURSIVE FUNCTION =================
-    int getTotalStepsRecursive(int index = 0) const {
-        // Base case
-        if (index >= count)
+    // ================= RECURSIVE =================
+    int getTotalStepsRecursive(size_t index = 0) const {
+        if (index >= sessions.size())
             return 0;
 
-        // Recursive case
-        return sessions[index].steps +
+        return sessions.at(index).steps +
             getTotalStepsRecursive(index + 1);
     }
 
     double getAverageStepsPerMinute() const {
-        if (count == 0)
+        if (sessions.empty())
             return 0.0;
 
         double total = 0.0;
-        for (int i = 0; i < count; i++)
-            total += sessions[i].steps / sessions[i].minutes;
+        for (size_t i = 0; i < sessions.size(); i++)
+            total += sessions.at(i).steps / sessions.at(i).minutes;
 
-        return total / count;
+        return total / sessions.size();
     }
 
     // ================= operator[] =================
-    WalkSession& operator[](int index) {
-        if (index < 0 || index >= count)
+    WalkSession& operator[](size_t index) {
+        if (index >= sessions.size())
             throw StepTrackerException("Invalid index access");
 
-        return sessions[index];
+        return sessions.at(index);
     }
 
-    const WalkSession& operator[](int index) const {
-        if (index < 0 || index >= count)
+    const WalkSession& operator[](size_t index) const {
+        if (index >= sessions.size())
             throw StepTrackerException("Invalid index access");
 
-        return sessions[index];
+        return sessions.at(index);
     }
 
     // ================= removeSession =================
-    void removeSession(int index) {
-        if (index < 0 || index >= count)
+    void removeSession(size_t index) {
+        if (index >= sessions.size())
             throw StepTrackerException("Invalid removal index");
 
-        for (int i = index; i < count - 1; i++)
-            sessions[i] = sessions[i + 1];
+        sessions.erase(sessions.begin() + index);
+    }
 
-        count--;
+    // ================= LINEAR SEARCH =================
+    int linearSearchBySteps(int target) const {
+        for (size_t i = 0; i < sessions.size(); i++) {
+            if (sessions.at(i).steps == target)
+                return static_cast<int>(i);
+        }
+        return -1;
+    }
+
+    // ================= BUBBLE SORT =================
+    void bubbleSortBySteps() {
+        for (size_t i = 0; i < sessions.size(); i++) {
+            for (size_t j = 0; j < sessions.size() - 1 - i; j++) {
+                if (sessions[j].steps > sessions[j + 1].steps) {
+                    swap(sessions[j], sessions[j + 1]);
+                }
+            }
+        }
+    }
+
+    // ================= BINARY SEARCH =================
+    int binarySearchBySteps(int target) {
+        bubbleSortBySteps();  // ensure sorted
+
+        int low = 0;
+        int high = static_cast<int>(sessions.size()) - 1;
+
+        while (low <= high) {
+            int mid = (low + high) / 2;
+
+            if (sessions.at(mid).steps == target)
+                return mid;
+            else if (sessions.at(mid).steps < target)
+                low = mid + 1;
+            else
+                high = mid - 1;
+        }
+        return -1;
     }
 };
 
@@ -169,7 +204,6 @@ int main() {
     } while (choice != 4);
 
     // _CrtDumpMemoryLeaks();
-
     return 0;
 }
 #endif
@@ -247,45 +281,63 @@ void displaySessions(const WalkSession sessions[], int count) {
     }
 }
 
-void saveToFile(const WalkSession sessions[], int count) {
-    ofstream file("walk_report.txt");
+// ================= DOCTEST =================
 
-    file << left << setw(10) << "Steps"
-        << setw(10) << "Minutes"
-        << setw(15) << "Steps/Min"
-        << "Idea\n";
-
-    for (int i = 0; i < count; i++) {
-        file << setw(10) << sessions[i].steps
-            << setw(10) << sessions[i].minutes
-            << setw(15) << fixed << setprecision(2)
-            << calculateStepsPerMinute(sessions[i])
-            << sessions[i].idea << "\n";
-    }
-
-    file.close();
+TEST_CASE("Linear search works") {
+    StepTracker t;
+    t.addSession({ 1000, 20, "", VAMPIRE });
+    t.addSession({ 2000, 30, "", HUNTER });
+    CHECK(t.linearSearchBySteps(2000) == 1);
 }
 
-// ================= DOCTEST TESTS =================
-
-TEST_CASE("Steps per minute calculation") {
-    WalkSession s{ 300, 30.0, "", VAMPIRE };
-    CHECK(calculateStepsPerMinute(s) == doctest::Approx(10.0));
+TEST_CASE("Binary search works") {
+    StepTracker t;
+    t.addSession({ 3000, 20, "", VAMPIRE });
+    t.addSession({ 1000, 20, "", HUNTER });
+    t.addSession({ 2000, 20, "", WIZARD });
+    CHECK(t.binarySearchBySteps(2000) != -1);
 }
 
-TEST_CASE("Invalid index throws exception") {
-    StepTracker tracker;
-    CHECK_THROWS(tracker[0]);
+TEST_CASE("Recursive total works") {
+    StepTracker t;
+    t.addSession({ 1000, 20, "", VAMPIRE });
+    t.addSession({ 2000, 20, "", HUNTER });
+    CHECK(t.getTotalStepsRecursive() == 3000);
 }
 
-TEST_CASE("Invalid removal throws exception") {
-    StepTracker tracker;
-    CHECK_THROWS(tracker.removeSession(0));
+TEST_CASE("Empty tracker binary search") {
+    StepTracker t;
+    CHECK(t.binarySearchBySteps(1000) == -1);
 }
 
-TEST_CASE("Recursive total steps works") {
-    StepTracker tracker;
-    tracker.addSession({ 1000, 20, "", VAMPIRE });
-    tracker.addSession({ 2000, 30, "", HUNTER });
-    CHECK(tracker.getTotalStepsRecursive() == 3000);
+TEST_CASE("Bubble sort orders correctly") {
+    StepTracker t;
+    t.addSession({ 3000, 20, "", VAMPIRE });
+    t.addSession({ 1000, 20, "", HUNTER });
+    t.addSession({ 2000, 20, "", WIZARD });
+
+    t.bubbleSortBySteps();
+
+    CHECK(t[0].steps == 1000);
+    CHECK(t[1].steps == 2000);
+    CHECK(t[2].steps == 3000);
+}
+
+TEST_CASE("Bubble sort orders correctly") {
+    StepTracker t;
+    t.addSession({ 3000, 20, "", VAMPIRE });
+    t.addSession({ 1000, 20, "", HUNTER });
+    t.addSession({ 2000, 20, "", WIZARD });
+
+    t.bubbleSortBySteps();
+
+    CHECK(t[0].steps == 1000);
+    CHECK(t[1].steps == 2000);
+    CHECK(t[2].steps == 3000);
+}
+
+TEST_CASE("Linear search returns -1 when not found") {
+    StepTracker t;
+    t.addSession({ 1000, 20, "", VAMPIRE });
+    CHECK(t.linearSearchBySteps(9999) == -1);
 }
