@@ -7,7 +7,6 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
-#include <vector>   // NEW for Week 09
 
 using namespace std;
 
@@ -18,8 +17,6 @@ using namespace std;
 #define DOCTEST_CONFIG_DISABLE
 #endif
 #include "doctest.h"
-
-const int MAX_SESSIONS = 5; // left for main program compatibility
 
 // ================= ENUM =================
 enum CharacterStyle {
@@ -43,131 +40,190 @@ struct WalkSession {
     CharacterStyle style = VAMPIRE;
 };
 
-// ================= CLASS =================
-class StepTracker {
+// =====================================================
+// ================= LINKED LIST ADT ===================
+// =====================================================
+class LinkedList {
 private:
-    vector<WalkSession> sessions;  // ARRAY REPLACED
+    struct Node {
+        WalkSession data;
+        Node* next;
+        Node(const WalkSession& s) : data(s), next(nullptr) {}
+    };
+
+    Node* head;
 
 public:
-    StepTracker() {}
+    // Constructor
+    LinkedList() : head(nullptr) {}
 
-    bool addSession(const WalkSession& s) {
-        if (s.steps <= 0 || s.minutes <= 0)
-            return false;
+    // Destructor
+    ~LinkedList() {
+        clear();
+    }
 
-        sessions.push_back(s);
+    // Clear entire list
+    void clear() {
+        Node* current = head;
+        while (current != nullptr) {
+            Node* temp = current;
+            current = current->next;
+            delete temp;
+        }
+        head = nullptr;
+    }
+
+    // Insert at front
+    void insertFront(const WalkSession& s) {
+        Node* newNode = new Node(s);
+        newNode->next = head;
+        head = newNode;
+    }
+
+    // Insert at back
+    void insertBack(const WalkSession& s) {
+        Node* newNode = new Node(s);
+
+        if (head == nullptr) {
+            head = newNode;
+            return;
+        }
+
+        Node* current = head;
+        while (current->next != nullptr)
+            current = current->next;
+
+        current->next = newNode;
+    }
+
+    // Remove node by steps value
+    bool remove(int steps) {
+        if (head == nullptr) return false;
+
+        if (head->data.steps == steps) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+            return true;
+        }
+
+        Node* current = head;
+        while (current->next != nullptr && current->next->data.steps != steps)
+            current = current->next;
+
+        if (current->next == nullptr) return false;
+
+        Node* temp = current->next;
+        current->next = temp->next;
+        delete temp;
         return true;
     }
 
-    size_t getSessionCount() const {
-        return sessions.size();
+    // Search node by steps value
+    int search(int steps) const {
+        Node* current = head;
+        int index = 0;
+
+        while (current != nullptr) {
+            if (current->data.steps == steps)
+                return index;
+            current = current->next;
+            index++;
+        }
+        return -1;
     }
 
-    int getTotalSteps() const {
-        int total = 0;
-        for (size_t i = 0; i < sessions.size(); i++)
-            total += sessions.at(i).steps;
-        return total;
+    // Traverse and print
+    void print() const {
+        Node* current = head;
+        while (current != nullptr) {
+            cout << current->data.steps << " steps, "
+                << current->data.minutes << " minutes, "
+                << current->data.idea << endl;
+            current = current->next;
+        }
     }
 
-    // ================= RECURSIVE =================
-    int getTotalStepsRecursive(size_t index = 0) const {
-        if (index >= sessions.size())
+    // Get total steps (recursive)
+    int getTotalStepsRecursive(Node* node) const {
+        if (node == nullptr)
             return 0;
-
-        return sessions.at(index).steps +
-            getTotalStepsRecursive(index + 1);
+        return node->data.steps + getTotalStepsRecursive(node->next);
     }
 
-    double getAverageStepsPerMinute() const {
-        if (sessions.empty())
-            return 0.0;
-
-        double total = 0.0;
-        for (size_t i = 0; i < sessions.size(); i++)
-            total += sessions.at(i).steps / sessions.at(i).minutes;
-
-        return total / sessions.size();
+    int getTotalStepsRecursive() const {
+        return getTotalStepsRecursive(head);
     }
 
-    // ================= operator[] =================
-    WalkSession& operator[](size_t index) {
-        if (index >= sessions.size())
-            throw StepTrackerException("Invalid index access");
+    // ================= ITERATOR =================
+    class Iterator {
+    private:
+        Node* current;
+    public:
+        Iterator(Node* start) : current(start) {}
 
-        return sessions.at(index);
-    }
-
-    const WalkSession& operator[](size_t index) const {
-        if (index >= sessions.size())
-            throw StepTrackerException("Invalid index access");
-
-        return sessions.at(index);
-    }
-
-    // ================= removeSession =================
-    void removeSession(size_t index) {
-        if (index >= sessions.size())
-            throw StepTrackerException("Invalid removal index");
-
-        sessions.erase(sessions.begin() + index);
-    }
-
-    // ================= LINEAR SEARCH =================
-    int linearSearchBySteps(int target) const {
-        for (size_t i = 0; i < sessions.size(); i++) {
-            if (sessions.at(i).steps == target)
-                return static_cast<int>(i);
+        bool hasNext() const {
+            return current != nullptr;
         }
-        return -1;
-    }
 
-    // ================= BUBBLE SORT =================
-    void bubbleSortBySteps() {
-        for (size_t i = 0; i < sessions.size(); i++) {
-            for (size_t j = 0; j < sessions.size() - 1 - i; j++) {
-                if (sessions[j].steps > sessions[j + 1].steps) {
-                    swap(sessions[j], sessions[j + 1]);
-                }
-            }
+        WalkSession& getData() {
+            return current->data;
         }
-    }
 
-    // ================= BINARY SEARCH =================
-    int binarySearchBySteps(int target) {
-        bubbleSortBySteps();  // ensure sorted
-
-        int low = 0;
-        int high = static_cast<int>(sessions.size()) - 1;
-
-        while (low <= high) {
-            int mid = (low + high) / 2;
-
-            if (sessions.at(mid).steps == target)
-                return mid;
-            else if (sessions.at(mid).steps < target)
-                low = mid + 1;
-            else
-                high = mid - 1;
+        void next() {
+            if (current != nullptr)
+                current = current->next;
         }
-        return -1;
+    };
+
+    Iterator begin() {
+        return Iterator(head);
     }
 };
 
-// ================= FUNCTION PROTOTYPES =================
+// =====================================================
+// ================= STEP TRACKER CLASS =================
+// =====================================================
+class StepTracker {
+private:
+    LinkedList sessions;  // Replaced vector with linked list
+
+public:
+    bool addSession(const WalkSession& s) {
+        if (s.steps <= 0 || s.minutes <= 0)
+            return false;
+        sessions.insertBack(s);
+        return true;
+    }
+
+    bool removeSession(int steps) {
+        return sessions.remove(steps);
+    }
+
+    int searchSession(int steps) const {
+        return sessions.search(steps);
+    }
+
+    int getTotalStepsRecursive() const {
+        return sessions.getTotalStepsRecursive();
+    }
+
+    void displaySessions() const {
+        sessions.print();
+    }
+};
+
+// =====================================================
+// ================= FUNCTION PROTOTYPES ===============
+// =====================================================
 void showBanner();
 void showMenu();
 int getMenuChoice();
-void addSession(WalkSession sessions[], int& count);
-double calculateStepsPerMinute(const WalkSession& session);
-void displaySessions(const WalkSession sessions[], int count);
-void saveToFile(const WalkSession sessions[], int count);
 
 // ================= NORMAL PROGRAM =================
 #ifndef _DEBUG
 int main() {
-    WalkSession sessions[MAX_SESSIONS];
-    int sessionCount = 0;
+    StepTracker tracker;
     int choice;
 
     showBanner();
@@ -176,29 +232,37 @@ int main() {
         showMenu();
         choice = getMenuChoice();
 
-        switch (choice) {
-        case 1:
-            if (sessionCount < MAX_SESSIONS)
-                addSession(sessions, sessionCount);
-            else
-                cout << "Session limit reached.\n";
-            break;
+        if (choice == 1) {
+            WalkSession s;
+            cin.ignore(1000, '\n');
 
-        case 2:
-            displaySessions(sessions, sessionCount);
-            break;
+            cout << "Enter idea or reminder: ";
+            getline(cin, s.idea);
 
-        case 3:
-            saveToFile(sessions, sessionCount);
-            cout << "Report saved to file.\n";
-            break;
+            cout << "Enter steps walked: ";
+            cin >> s.steps;
 
-        case 4:
+            cout << "Enter minutes walked: ";
+            cin >> s.minutes;
+
+            int styleChoice;
+            cout << "Choose style (1=Vampire, 2=Hunter, 3=Wizard): ";
+            cin >> styleChoice;
+            s.style = static_cast<CharacterStyle>(styleChoice);
+
+            tracker.addSession(s);
+        }
+        else if (choice == 2) {
+            tracker.displaySessions();
+        }
+        else if (choice == 3) {
+            cout << "Enter steps to remove: ";
+            int steps;
+            cin >> steps;
+            tracker.removeSession(steps);
+        }
+        else if (choice == 4) {
             cout << "Goodbye!\n";
-            break;
-
-        default:
-            cout << "Invalid option.\n";
         }
 
     } while (choice != 4);
@@ -209,7 +273,6 @@ int main() {
 #endif
 
 // ================= FUNCTIONS =================
-
 void showBanner() {
     cout << "=====================================\n";
     cout << "   Step Tracker and Idea Log Program\n";
@@ -219,7 +282,7 @@ void showBanner() {
 void showMenu() {
     cout << "\n1. Add Walking Session\n";
     cout << "2. View Sessions\n";
-    cout << "3. Save Report\n";
+    cout << "3. Remove Session\n";
     cout << "4. Exit\n";
 }
 
@@ -233,111 +296,47 @@ int getMenuChoice() {
     return choice;
 }
 
-void addSession(WalkSession sessions[], int& count) {
-    cin.ignore(1000, '\n');
+// =====================================================
+// ======================= DOCTESTS =====================
+// =====================================================
 
-    cout << "Enter idea or reminder: ";
-    getline(cin, sessions[count].idea);
-
-    do {
-        cout << "Enter steps walked: ";
-        cin >> sessions[count].steps;
-    } while (sessions[count].steps <= 0);
-
-    do {
-        cout << "Enter minutes walked: ";
-        cin >> sessions[count].minutes;
-    } while (sessions[count].minutes <= 0);
-
-    int styleChoice;
-    do {
-        cout << "Choose style (1=Vampire, 2=Hunter, 3=Wizard): ";
-        cin >> styleChoice;
-    } while (styleChoice < 1 || styleChoice > 3);
-
-    sessions[count].style = static_cast<CharacterStyle>(styleChoice);
-    count++;
+TEST_CASE("Insert into empty list") {
+    StepTracker tracker;
+    CHECK(tracker.addSession({ 1000, 20, "Morning Walk", VAMPIRE }) == true);
 }
 
-double calculateStepsPerMinute(const WalkSession& session) {
-    if (session.minutes <= 0)
-        return 0.0;
-
-    return session.steps / session.minutes;
+TEST_CASE("Search existing session") {
+    StepTracker tracker;
+    tracker.addSession({ 2000, 30, "Evening Walk", HUNTER });
+    CHECK(tracker.searchSession(2000) == 0);
 }
 
-void displaySessions(const WalkSession sessions[], int count) {
-    cout << left << setw(10) << "Steps"
-        << setw(10) << "Minutes"
-        << setw(15) << "Steps/Min"
-        << "Idea\n";
-
-    for (int i = 0; i < count; i++) {
-        cout << setw(10) << sessions[i].steps
-            << setw(10) << sessions[i].minutes
-            << setw(15) << fixed << setprecision(2)
-            << calculateStepsPerMinute(sessions[i])
-            << sessions[i].idea << "\n";
-    }
+TEST_CASE("Search non-existing session") {
+    StepTracker tracker;
+    tracker.addSession({ 1500, 25, "Lunch Walk", WIZARD });
+    CHECK(tracker.searchSession(9999) == -1);
 }
 
-// ================= DOCTEST =================
-
-TEST_CASE("Linear search works") {
-    StepTracker t;
-    t.addSession({ 1000, 20, "", VAMPIRE });
-    t.addSession({ 2000, 30, "", HUNTER });
-    CHECK(t.linearSearchBySteps(2000) == 1);
+TEST_CASE("Delete existing session") {
+    StepTracker tracker;
+    tracker.addSession({ 3000, 40, "Night Walk", VAMPIRE });
+    CHECK(tracker.removeSession(3000) == true);
 }
 
-TEST_CASE("Binary search works") {
-    StepTracker t;
-    t.addSession({ 3000, 20, "", VAMPIRE });
-    t.addSession({ 1000, 20, "", HUNTER });
-    t.addSession({ 2000, 20, "", WIZARD });
-    CHECK(t.binarySearchBySteps(2000) != -1);
+TEST_CASE("Delete non-existing session") {
+    StepTracker tracker;
+    tracker.addSession({ 1200, 15, "Quick Walk", HUNTER });
+    CHECK(tracker.removeSession(9999) == false);
 }
 
-TEST_CASE("Recursive total works") {
-    StepTracker t;
-    t.addSession({ 1000, 20, "", VAMPIRE });
-    t.addSession({ 2000, 20, "", HUNTER });
-    CHECK(t.getTotalStepsRecursive() == 3000);
+TEST_CASE("Recursive total steps calculation") {
+    StepTracker tracker;
+    tracker.addSession({ 1000, 20, "", VAMPIRE });
+    tracker.addSession({ 2000, 30, "", HUNTER });
+    CHECK(tracker.getTotalStepsRecursive() == 3000);
 }
 
-TEST_CASE("Empty tracker binary search") {
-    StepTracker t;
-    CHECK(t.binarySearchBySteps(1000) == -1);
-}
-
-TEST_CASE("Bubble sort orders correctly") {
-    StepTracker t;
-    t.addSession({ 3000, 20, "", VAMPIRE });
-    t.addSession({ 1000, 20, "", HUNTER });
-    t.addSession({ 2000, 20, "", WIZARD });
-
-    t.bubbleSortBySteps();
-
-    CHECK(t[0].steps == 1000);
-    CHECK(t[1].steps == 2000);
-    CHECK(t[2].steps == 3000);
-}
-
-TEST_CASE("Bubble sort orders correctly") {
-    StepTracker t;
-    t.addSession({ 3000, 20, "", VAMPIRE });
-    t.addSession({ 1000, 20, "", HUNTER });
-    t.addSession({ 2000, 20, "", WIZARD });
-
-    t.bubbleSortBySteps();
-
-    CHECK(t[0].steps == 1000);
-    CHECK(t[1].steps == 2000);
-    CHECK(t[2].steps == 3000);
-}
-
-TEST_CASE("Linear search returns -1 when not found") {
-    StepTracker t;
-    t.addSession({ 1000, 20, "", VAMPIRE });
-    CHECK(t.linearSearchBySteps(9999) == -1);
+TEST_CASE("Traverse empty list") {
+    StepTracker tracker;
+    CHECK(tracker.getTotalStepsRecursive() == 0);
 }

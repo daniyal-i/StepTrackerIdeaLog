@@ -1,21 +1,43 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="StepTracker">
-    <Position X="1" Y="3.5" Width="3" />
+    <Position X="2.5" Y="0.5" Width="3" />
     <TypeIdentifier>
-      <HashCode>QAAAAAAAAAAAIAAABAgAAAAAAAAEAAAAAAAgAABAAAA=</HashCode>
+      <HashCode>ACAAAAAAAAFAIAAAAAgAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>StepTrackerIdeaLog.cpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LinkedList">
+    <Position X="2.25" Y="3" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Struct Name="LinkedList::Node">
+        <TypeIdentifier>
+          <NewMemberFileName>StepTrackerIdeaLog.cpp</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Class Name="LinkedList::Iterator">
+        <TypeIdentifier>
+          <NewMemberFileName>StepTrackerIdeaLog.cpp</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AGQAAAAAgBAAAAAEAAAABQAQAAAAAAAQACAAAAAAAAA=</HashCode>
       <FileName>StepTrackerIdeaLog.cpp</FileName>
     </TypeIdentifier>
   </Class>
   <Struct Name="WalkSession">
-    <Position X="5.5" Y="3.75" Width="1.25" />
+    <Position X="4.25" Y="3" Width="1.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAQBAAAQAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
       <FileName>StepTrackerIdeaLog.cpp</FileName>
     </TypeIdentifier>
   </Struct>
   <Enum Name="CharacterStyle" Collapsed="true">
-    <Position X="7.5" Y="1.75" Width="1.5" />
+    <Position X="6" Y="1.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AACAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAA=</HashCode>
       <FileName>StepTrackerIdeaLog.cpp</FileName>

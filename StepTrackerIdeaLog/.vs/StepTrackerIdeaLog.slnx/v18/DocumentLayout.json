@@ -7,8 +7,8 @@
       "RelativeMoniker": "D:0:0:{50332BCD-4B75-428A-B5C1-00CDA98F86B5}|StepTrackerIdeaLog.vcxproj|solutionrelative:StepTrackerIdeaLog.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{50332BCD-4B75-428A-B5C1-00CDA98F86B5}|StepTrackerIdeaLog.vcxproj|C:\\Users\\Daniyal Imran\\Documents\\GitHub\\StepTrackerLog\\StepTrackerIdeaLog\\StepTrackerClassDiagram.cd||{59B0B277-7DDF-4E36-A3ED-02DAC5B9E2FA}|",
-      "RelativeMoniker": "D:0:0:{50332BCD-4B75-428A-B5C1-00CDA98F86B5}|StepTrackerIdeaLog.vcxproj|solutionrelative:StepTrackerClassDiagram.cd||{59B0B277-7DDF-4E36-A3ED-02DAC5B9E2FA}|"
+      "AbsoluteMoniker": "D:0:0:{50332BCD-4B75-428A-B5C1-00CDA98F86B5}|StepTrackerIdeaLog.vcxproj|C:\\Users\\Daniyal Imran\\Documents\\GitHub\\StepTrackerLog\\StepTrackerIdeaLog\\StepTrackerClassDiagram.cd||{59B0B277-7DDF-4E36-A3ED-02DAC5B9E2FA}",
+      "RelativeMoniker": "D:0:0:{50332BCD-4B75-428A-B5C1-00CDA98F86B5}|StepTrackerIdeaLog.vcxproj|solutionrelative:StepTrackerClassDiagram.cd||{59B0B277-7DDF-4E36-A3ED-02DAC5B9E2FA}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,15 +18,21 @@
       "DocumentGroups": [
         {
           "DockedWidth": 631,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": -1,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
-            },
+            }
+          ]
+        },
+        {
+          "DockedWidth": 20,
+          "SelectedChildIndex": 1,
+          "Children": [
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
             },
             {
               "$type": "Document",
@@ -36,17 +42,11 @@
               "RelativeDocumentMoniker": "StepTrackerIdeaLog.cpp",
               "ToolTip": "C:\\Users\\Daniyal Imran\\Documents\\GitHub\\StepTrackerLog\\StepTrackerIdeaLog\\StepTrackerIdeaLog.cpp",
               "RelativeToolTip": "StepTrackerIdeaLog.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAALAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-02-23T03:29:24.927Z",
+              "WhenOpened": "2026-03-29T22:55:12.819Z",
               "EditorCaption": ""
-            }
-          ]
-        },
-        {
-          "DockedWidth": 20,
-          "SelectedChildIndex": 0,
-          "Children": [
+            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
@@ -56,12 +56,8 @@
               "ToolTip": "C:\\Users\\Daniyal Imran\\Documents\\GitHub\\StepTrackerLog\\StepTrackerIdeaLog\\StepTrackerClassDiagram.cd",
               "RelativeToolTip": "StepTrackerClassDiagram.cd",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000463|",
-              "WhenOpened": "2026-02-23T04:24:53.407Z",
+              "WhenOpened": "2026-03-30T01:26:36.381Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
             }
           ]
         }
