@@ -40,6 +40,100 @@ struct WalkSession {
     CharacterStyle style = VAMPIRE;
 };
 
+// DN Added array based stack class 
+class SessionStack {
+private:
+    static const int MAX_SIZE = 100;
+    WalkSession items[MAX_SIZE];
+    int topIndex;
+
+public:
+    SessionStack() : topIndex(-1) {}
+
+    bool isEmpty() const {
+        return topIndex == -1;
+    }
+
+    bool isFull() const {
+        return topIndex == MAX_SIZE - 1;
+    }
+
+    void push(const WalkSession& s) {
+        if (isFull())
+            throw StepTrackerException("Stack is full.");
+        topIndex++;
+        items[topIndex] = s;
+    }
+
+    void pop() {
+        if (isEmpty())
+            throw StepTrackerException("Stack is empty.");
+        topIndex--;
+    }
+
+    WalkSession top() const {
+        if (isEmpty())
+            throw StepTrackerException("Stack is empty.");
+        return items[topIndex];
+    }
+};
+
+// DN 2: Added a custom linked list queue class existing LinkedList class
+class SessionQueue {
+private:
+    struct QueueNode {
+        WalkSession data;
+        QueueNode* next;
+        QueueNode(const WalkSession& s) : data(s), next(nullptr) {}
+    };
+
+    QueueNode* frontPtr;
+    QueueNode* backPtr;
+
+public:
+    SessionQueue() : frontPtr(nullptr), backPtr(nullptr) {}
+
+    ~SessionQueue() {
+        while (!isEmpty())
+            dequeue();
+    }
+
+    bool isEmpty() const {
+        return frontPtr == nullptr;
+    }
+
+    void enqueue(const WalkSession& s) {
+        QueueNode* newNode = new QueueNode(s);
+
+        if (isEmpty()) {
+            frontPtr = newNode;
+            backPtr = newNode;
+        }
+        else {
+            backPtr->next = newNode;
+            backPtr = newNode;
+        }
+    }
+
+    void dequeue() {
+        if (isEmpty())
+            throw StepTrackerException("Queue is empty.");
+
+        QueueNode* temp = frontPtr;
+        frontPtr = frontPtr->next;
+        delete temp;
+
+        if (frontPtr == nullptr)
+            backPtr = nullptr;
+    }
+
+    WalkSession front() const {
+        if (isEmpty())
+            throw StepTrackerException("Queue is empty.");
+        return frontPtr->data;
+    }
+};
+
 // =====================================================
 // ================= LINKED LIST ADT ===================
 // =====================================================
@@ -187,12 +281,16 @@ public:
 class StepTracker {
 private:
     LinkedList sessions;  // Replaced vector with linked list
+    SessionStack recentSessions;
 
 public:
     bool addSession(const WalkSession& s) {
         if (s.steps <= 0 || s.minutes <= 0)
             return false;
         sessions.insertBack(s);
+        // DN 3: Store each successful session on the custom stack so the
+        // existing program now uses ADTs 
+        recentSessions.push(s);
         return true;
     }
 
@@ -206,6 +304,12 @@ public:
 
     int getTotalStepsRecursive() const {
         return sessions.getTotalStepsRecursive();
+    }
+
+    // DN 4: Added a small accessor so doctests can verify the stack is being
+    // used by StepTracker without rewriting
+    WalkSession getMostRecentSession() const {
+        return recentSessions.top();
     }
 
     void displaySessions() const {
@@ -339,4 +443,70 @@ TEST_CASE("Recursive total steps calculation") {
 TEST_CASE("Traverse empty list") {
     StepTracker tracker;
     CHECK(tracker.getTotalStepsRecursive() == 0);
+}
+
+// DN 5-A: Added custom stack operations
+TEST_CASE("Stack starts empty") {
+    SessionStack stack;
+    CHECK(stack.isEmpty() == true);
+}
+
+TEST_CASE("Stack push and top") {
+    SessionStack stack;
+    stack.push({ 1111, 10, "Top item", VAMPIRE });
+    CHECK(stack.top().steps == 1111);
+}
+
+TEST_CASE("Stack pop removes top item") {
+    SessionStack stack;
+    stack.push({ 1111, 10, "First", VAMPIRE });
+    stack.push({ 2222, 20, "Second", HUNTER });
+    stack.pop();
+    CHECK(stack.top().steps == 1111);
+}
+
+TEST_CASE("Stack pop on empty throws exception") {
+    SessionStack stack;
+    CHECK_THROWS_AS(stack.pop(), StepTrackerException);
+}
+
+TEST_CASE("Stack push on full throws exception") {
+    SessionStack stack;
+    for (int i = 0; i < 100; i++) {
+        stack.push({ i + 1, 10, "Fill stack", VAMPIRE });
+    }
+    CHECK_THROWS_AS(stack.push({ 101, 10, "Overflow", HUNTER }), StepTrackerException);
+}
+
+// DN 5-B: Added doctests for the custom queue operations 
+TEST_CASE("Queue starts empty") {
+    SessionQueue queue;
+    CHECK(queue.isEmpty() == true);
+}
+
+TEST_CASE("Queue enqueue and front") {
+    SessionQueue queue;
+    queue.enqueue({ 3333, 30, "Front item", WIZARD });
+    CHECK(queue.front().steps == 3333);
+}
+
+TEST_CASE("Queue dequeue advances front") {
+    SessionQueue queue;
+    queue.enqueue({ 3333, 30, "First", WIZARD });
+    queue.enqueue({ 4444, 40, "Second", HUNTER });
+    queue.dequeue();
+    CHECK(queue.front().steps == 4444);
+}
+
+TEST_CASE("Queue dequeue on empty throws exception") {
+    SessionQueue queue;
+    CHECK_THROWS_AS(queue.dequeue(), StepTrackerException);
+}
+
+// DN 5-C: Added one integration test to prove StepTracker now uses the custom stack.
+TEST_CASE("StepTracker stores the most recent session on the stack") {
+    StepTracker tracker;
+    tracker.addSession({ 5000, 50, "First walk", VAMPIRE });
+    tracker.addSession({ 6000, 60, "Most recent walk", WIZARD });
+    CHECK(tracker.getMostRecentSession().steps == 6000);
 }
