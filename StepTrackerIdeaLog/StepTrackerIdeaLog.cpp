@@ -1,5 +1,5 @@
-// #define _CRTDBG_MAP_ALLOC
-// #include <crtdbg.h>
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
 
 #include <iostream>
 #include <iomanip>
@@ -7,8 +7,11 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include "json.hpp"
 
 using namespace std;
+
+using json = nlohmann::json;
 
 // ----------- DOCTEST ------------
 #ifdef _DEBUG
@@ -155,6 +158,10 @@ public:
         return getTotalStepsRecursive(head);
     }
 
+    bool isEmpty() const {
+        return head == nullptr;
+    }
+
     // ================= ITERATOR =================
     class Iterator {
     private:
@@ -211,6 +218,81 @@ public:
     void displaySessions() const {
         sessions.print();
     }
+
+    void tryJSON() {
+        try {
+            loadFromJSON("sessions.json");
+        }
+        catch (const StepTrackerException& e) {
+            cout << e.what() << endl;
+        }
+        sessions.clear();
+    }
+
+    void loadFromJSON(const string& filename) {
+        ifstream file(filename);
+
+        try {
+            if (!file.is_open()) {
+                throw StepTrackerException("Error: Could not open JSON file.");
+            }
+
+            json data;
+            file >> data;
+
+            if (!data.is_array()) {
+                throw StepTrackerException("Error: JSON is not an array.");
+            }
+
+            sessions.clear();
+
+            for (const auto& item : data) {
+                WalkSession s;
+
+                s.steps = item.at("steps");
+                s.minutes = item.at("minutes");
+                s.idea = item.at("idea");
+                s.style = static_cast<CharacterStyle>((int)item.at("style"));
+
+                addSession(s);
+            }
+        }
+        catch (const json::exception& e) {
+            throw StepTrackerException(string("JSON parsing error: ") + e.what());
+        }
+    }
+
+    void saveToJSON(const string& filename) const {
+
+        if (sessions.isEmpty()) {
+            throw StepTrackerException("Error: No sessions to save.");
+        }
+
+        ofstream file(filename);
+
+        if (!file.is_open()) {
+            throw StepTrackerException("Error: Could not open file for writing.");
+        }
+
+        json data = json::array();
+
+        LinkedList::Iterator it = const_cast<LinkedList&>(sessions).begin();
+
+        while (it.hasNext()) {
+            WalkSession& s = it.getData();
+
+            json item;
+            item["steps"] = s.steps;
+            item["minutes"] = s.minutes;
+            item["idea"] = s.idea;
+            item["style"] = s.style;
+
+            data.push_back(item);
+            it.next();
+        }
+
+        file << setw(4) << data;
+    }
 };
 
 // =====================================================
@@ -225,6 +307,8 @@ int getMenuChoice();
 int main() {
     StepTracker tracker;
     int choice;
+
+    tracker.tryJSON();
 
     showBanner();
 
@@ -262,12 +346,31 @@ int main() {
             tracker.removeSession(steps);
         }
         else if (choice == 4) {
+            try {
+                tracker.saveToJSON("sessions.json");
+                cout << "Sessions saved successfully!\n";
+            }
+            catch (const StepTrackerException& e) {
+                cout << e.what() << endl;
+            }
+        }
+        else if (choice == 5) {
+            try {
+                tracker.loadFromJSON("sessions.json");
+                cout << "Sessions loaded successfully!\n";
+            }
+            catch (const StepTrackerException& e) {
+                cout << e.what() << endl;
+            }
+        }
+        else if (choice == 6) {
             cout << "Goodbye!\n";
         }
 
-    } while (choice != 4);
+    } while (choice != 6);
 
-    // _CrtDumpMemoryLeaks();
+    _CrtDumpMemoryLeaks();
+
     return 0;
 }
 #endif
@@ -283,7 +386,9 @@ void showMenu() {
     cout << "\n1. Add Walking Session\n";
     cout << "2. View Sessions\n";
     cout << "3. Remove Session\n";
-    cout << "4. Exit\n";
+    cout << "4. Save to JSON\n";
+    cout << "5. Load From JSON\n";
+    cout << "6. Exit\n";
 }
 
 int getMenuChoice() {
@@ -339,4 +444,42 @@ TEST_CASE("Recursive total steps calculation") {
 TEST_CASE("Traverse empty list") {
     StepTracker tracker;
     CHECK(tracker.getTotalStepsRecursive() == 0);
+}
+
+TEST_CASE("Load valid JSON file") {
+    StepTracker tracker;
+    CHECK_NOTHROW(tracker.loadFromJSON("sessions.json"));
+    CHECK(tracker.getTotalStepsRecursive() > 0);
+}
+
+TEST_CASE("Handle missing file") {
+    StepTracker tracker;
+    CHECK_THROWS(tracker.loadFromJSON("nonexistent.json"));
+}
+
+TEST_CASE("Handle malformed JSON") {
+    StepTracker tracker;
+    ofstream badFile("bad.json");
+    badFile << "{ invalid json ";
+    badFile.close();
+    CHECK_THROWS(tracker.loadFromJSON("bad.json"));
+}
+
+TEST_CASE("Save and reload JSON") {
+    StepTracker tracker;
+
+    tracker.addSession({ 1000, 20, "Test", VAMPIRE });
+    tracker.addSession({ 2000, 30, "Test2", HUNTER });
+
+    CHECK_NOTHROW(tracker.saveToJSON("test.json"));
+
+    StepTracker tracker2;
+    CHECK_NOTHROW(tracker2.loadFromJSON("test.json"));
+
+    CHECK(tracker2.getTotalStepsRecursive() == 3000);
+}
+
+TEST_CASE("Save to invalid path throws") {
+    StepTracker tracker;
+    CHECK_THROWS(tracker.saveToJSON("/invalid/path/file.json"));
 }
