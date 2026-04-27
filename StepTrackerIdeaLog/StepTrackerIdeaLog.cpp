@@ -1,5 +1,8 @@
 // #define _CRTDBG_MAP_ALLOC
 // #include <crtdbg.h>
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 
 #include <iostream>
 #include <iomanip>
