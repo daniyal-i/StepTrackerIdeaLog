@@ -1,0 +1,7 @@
+[
+  { "steps": 1200, "minutes": 18.5, "idea": "Morning loop around the block", "style": 1 },
+  { "steps": 800, "minutes": 12.0, "idea": "Quick walk: brainstorm Week 14 PR description", "style": 2 },
+  { "steps": 2200, "minutes": 32.0, "idea": "Trail walk: refactor LinkedList print formatting", "style": 3 },
+  { "steps": 1500, "minutes": 21.0, "idea": "Lunch walk: plan trivia import feature", "style": 2 },
+  { "steps": 3000, "minutes": 44.0, "idea": "Evening walk: list doctest cases to add", "style": 1 }
+]
